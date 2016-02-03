@@ -3,7 +3,7 @@
 - The traffic is encrypted using RC4 with a fixed key located *hardcoded* in the "Easy Smart Configuration Utility"
 
 ## Is it possible to configure foreign devices?
-Yes, after intercepting the password (default is admin:admin on all devices, the maximum password length is 16) without any restrictions.
+Yes, after intercepting or bruteforcing the password (default is admin:admin on all devices, the maximum password length is 16) without any restrictions.
 
 ##Package
 `<header>[<type><length><value>]`  
