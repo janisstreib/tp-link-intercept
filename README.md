@@ -1,5 +1,6 @@
 ##Package
-`<header>[<type><length><value>]<-n times`
+`<header>[<type><length><value>]`
+The body may contain more than one data block called "TLV".
 
 ##General communications
 The password is transmitted on each configuration change request.
