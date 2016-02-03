@@ -15,6 +15,11 @@ public class Intercept {
 	static {
 		TYPES.put((short) 512, "Username");
 		TYPES.put((short) 514, "Password");
+		TYPES.put((short) 7, "Device firmware version");
+		TYPES.put((short) 8, "Hardware version");
+		TYPES.put((short) 1, "Model (?)");
+		TYPES.put((short) 2, "Device description");
+
 	}
 
 	public static void main(String[] args) throws IOException {
