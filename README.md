@@ -8,6 +8,17 @@ The body may contain more than one data block called "TLV".
 ##General communications
 The password is transmitted on each configuration change request.
 
+##List of possibly affected devices
+- TL-SG1024DE 1.0
+- TL-SG1024DE 2.0
+- TL-SG1016DE 1.0
+- TL-SG1016DE 2.0
+- TL-SG108E 1.0
+- TL-SG108E 2.0
+- TL-SG105E 1.0
+- TL-SG105E 2.0
+- TL-SG108PE 1.0
+
 ##Sample output for a login
 
 	===NEW PACKET ON PORT 29808 FROM /192.168.0.10
