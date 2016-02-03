@@ -99,7 +99,7 @@ public class Intercept {
 			shortBuf = Arrays.copyOfRange(data, i, i + length);
 			i += length;
 			out.println("  BODY:" + bytesToHex(shortBuf) + " (String: "
-					+ new String(shortBuf) + ")");
+					+ new String(shortBuf).trim() + ")");
 		}
 	}
 
