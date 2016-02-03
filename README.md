@@ -1,5 +1,5 @@
 ##Package
-`<header>[<type><length><value>]`
+`<header>[<type><length><value>]`  
 The body may contain more than one data block called "TLV".
 
 ##General communications
