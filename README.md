@@ -1,6 +1,7 @@
 ## Why is it possible to intercept the management traffic?
 - The traffic goes over broadcast.
 - The traffic is encrypted using RC4 with a fixed key located *hardcoded* in the "Easy Smart Configuration Utility"
+
 ##Package
 `<header>[<type><length><value>]`  
 The body may contain more than one data block called "TLV".
