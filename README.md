@@ -2,6 +2,9 @@
 - The traffic goes over broadcast.
 - The traffic is encrypted using RC4 with a fixed key located *hardcoded* in the "Easy Smart Configuration Utility"
 
+## Is it possible to configure foreign devices?
+Yes, after intercepting the password without any restrictions.
+
 ##Package
 `<header>[<type><length><value>]`  
 The body may contain more than one data block called "TLV".
