@@ -190,6 +190,7 @@ public class Intercept {
 		}
 	}
 
+	// from decompiled TLV
 	public static short byte2Short(byte[] paramArrayOfByte) {
 		if (paramArrayOfByte.length != 2) {
 			return 0;
@@ -197,6 +198,7 @@ public class Intercept {
 		return (short) (paramArrayOfByte[0] << 8 & 0xFF00 | paramArrayOfByte[1] & 0xFF);
 	}
 
+	// from decompiled TLV
 	public static int byte2int(byte[] paramArrayOfByte) {
 		if (paramArrayOfByte.length != 4) {
 			return 0;
