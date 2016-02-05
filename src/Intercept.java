@@ -129,8 +129,9 @@ public class Intercept {
                     + bytesToHex(shortBuf)
                     + " ("
                     + (pType == null ? new String(shortBuf).trim()
-                            + "::unknown" : pType.makeHumanRadable(shortBuf)
-                            .trim() + "::" + pType.getClass().getName()) + ")");
+                            + "::unknown" : (shortBuf.length == 0 ? "null"
+                            : pType.makeHumanRadable(shortBuf).trim() + "::"
+                                    + pType.getClass().getName())) + ")");
         }
     }
 
