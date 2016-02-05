@@ -2,15 +2,19 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+/**
+ * Very rough implementation using some of the decompiled source from the easy
+ * smart configuration utility.
+ */
 public class Intercept {
     private static final int CLIENT_COMMANDS = 29808;
     private static final int SERVER_COMMANDS = 29809;
     private static final HashMap<Short, String> TYPES = new HashMap<Short, String>();
+    private static int up = 0;
 
     static {
         TYPES.put((short) 512, "Username");
@@ -43,8 +47,15 @@ public class Intercept {
             @Override
             public void run() {
                 try {
-                    listen(CLIENT_COMMANDS, System.err);
+                    DatagramSocket out = new DatagramSocket(CLIENT_COMMANDS);
+                    while (up != 1 || !out.isBound()) {
+                        Thread.sleep(100);
+                    }
+                    TPTools.scanForDevices(out);
+                    listen(out, System.err);
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
@@ -55,7 +66,8 @@ public class Intercept {
             @Override
             public void run() {
                 try {
-                    listen(SERVER_COMMANDS, System.out);
+                    DatagramSocket in = new DatagramSocket(SERVER_COMMANDS);
+                    listen(in, System.out);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -64,26 +76,25 @@ public class Intercept {
         }).start();
     }
 
-    private static void listen(int port, PrintStream out)
+    private static void listen(DatagramSocket transferSocket, PrintStream out)
             throws SocketException, IOException {
-        try (DatagramSocket transferSocket = new DatagramSocket(
-                new InetSocketAddress(port))) {
-            transferSocket.setReuseAddress(true);
-            while (true) {
-                byte[] crypt = new byte['ᝰ'];
-                DatagramPacket localDatagramPacket = new DatagramPacket(crypt,
-                        crypt.length);
-                transferSocket.receive(localDatagramPacket);
-                out.println("\n\n===NEW PACKET ON PORT " + port + " FROM "
-                        + localDatagramPacket.getAddress());
-                crypt = Arrays.copyOf(crypt, localDatagramPacket.getLength());
-                RC4.crypt(crypt);
-                out.println("Decrypted data:");
-                int offset = packet2Header(crypt, out);
-                out.println("  BODY:");
-                readBody(crypt, offset, out);
-                out.println("  RAW: " + bytesToHex(crypt));
-            }
+        transferSocket.setReuseAddress(true);
+        while (true) {
+            byte[] crypt = new byte['ᝰ'];
+            DatagramPacket localDatagramPacket = new DatagramPacket(crypt,
+                    crypt.length);
+            up++;
+            transferSocket.receive(localDatagramPacket);
+            out.println("\n\n===NEW PACKET ON PORT "
+                    + localDatagramPacket.getPort() + " FROM "
+                    + localDatagramPacket.getAddress());
+            crypt = Arrays.copyOf(crypt, localDatagramPacket.getLength());
+            RC4.crypt(crypt);
+            out.println("Decrypted data:");
+            int offset = packet2Header(crypt, out);
+            out.println("  BODY:");
+            readBody(crypt, offset, out);
+            out.println("  RAW: " + bytesToHex(crypt));
         }
     }
 
