@@ -116,8 +116,8 @@ public class Intercept {
             i += 2;
             short type = byte2Short(shortBuf);
             Type pType = TYPES.get(type);
-            out.println("  TYPE:" + type + " (" + pType == null ? "Unknown"
-                    : pType + ")");
+            out.println("  TYPE:" + type + " ("
+                    + (pType == null ? "Unknown" : pType.getTypeName()) + ")");
             shortBuf = Arrays.copyOfRange(data, i, i + 2);
             i += 2;
             short length = byte2Short(shortBuf);
