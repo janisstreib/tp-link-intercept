@@ -13,31 +13,31 @@ import java.util.HashMap;
 public class Intercept {
     private static final int CLIENT_COMMANDS = 29808;
     private static final int SERVER_COMMANDS = 29809;
-    private static final HashMap<Short, String> TYPES = new HashMap<Short, String>();
+    private static final HashMap<Short, Type> TYPES = new HashMap<Short, Type>();
     private static int up = 0;
 
     static {
-        TYPES.put((short) 512, "Username");
-        TYPES.put((short) 514, "Password");
-        TYPES.put((short) 7, "Device firmware version");
-        TYPES.put((short) 8, "Hardware version");
-        TYPES.put((short) 1, "Model (?)");
-        TYPES.put((short) 2, "Device description");
-        TYPES.put((short) 9, "DHCP");
-        TYPES.put((short) 17152, "Loop prevention");
-        TYPES.put((short) 6, "Default gateway");
-        TYPES.put((short) 4, "IP Address");
-        TYPES.put((short) 5, "Subnet Mask");
-        TYPES.put((short) 4096, "Port setting");
-        TYPES.put((short) 4352, "IGMP Snooping");
-        TYPES.put((short) 16640, "Port Trunk/Mirror");
-        TYPES.put((short) 16384, "Port Statistics");
-        TYPES.put((short) 16896, "Cable Test");
-        TYPES.put((short) 8192, "MTU VLAN");
-        TYPES.put((short) 8448, "Port Based VLAN");
-        TYPES.put((short) 8704, "802.1 Q VLAN");
-        TYPES.put((short) 8706, "802.1Q PVID Setting");
-        TYPES.put((short) 773, "System reboot");
+        TYPES.put((short) 512, new StringType("Username"));
+        TYPES.put((short) 514, new StringType("Password"));
+        TYPES.put((short) 7, new StringType("Device firmware version"));
+        TYPES.put((short) 8, new StringType("Hardware version"));
+        TYPES.put((short) 1, new StringType("Model (?)"));
+        TYPES.put((short) 2, new StringType("Device description"));
+        TYPES.put((short) 9, new BooleanType("DHCP"));
+        TYPES.put((short) 17152, new RawType("Loop prevention"));
+        TYPES.put((short) 6, new IPAddressType("Default gateway"));
+        TYPES.put((short) 4, new IPAddressType("IP Address"));
+        TYPES.put((short) 5, new IPAddressType("Subnet Mask"));
+        TYPES.put((short) 4096, new RawType("Port setting"));
+        TYPES.put((short) 4352, new RawType("IGMP Snooping"));
+        TYPES.put((short) 16640, new RawType("Port Trunk/Mirror"));
+        TYPES.put((short) 16384, new RawType("Port Statistics"));
+        TYPES.put((short) 16896, new RawType("Cable Test"));
+        TYPES.put((short) 8192, new RawType("MTU VLAN"));
+        TYPES.put((short) 8448, new RawType("Port Based VLAN"));
+        TYPES.put((short) 8704, new RawType("802.1 Q VLAN"));
+        TYPES.put((short) 8706, new RawType("802.1Q PVID Setting"));
+        TYPES.put((short) 773, new RawType("System reboot"));
 
     }
 
@@ -49,7 +49,7 @@ public class Intercept {
                 try {
                     DatagramSocket out = new DatagramSocket(CLIENT_COMMANDS);
                     while (up != 1 || !out.isBound()) {
-                        Thread.sleep(100);
+                        Thread.sleep(500);
                     }
                     TPTools.scanForDevices(out);
                     listen(out, System.err);
@@ -115,8 +115,9 @@ public class Intercept {
             byte[] shortBuf = Arrays.copyOfRange(data, i, i + 2);
             i += 2;
             short type = byte2Short(shortBuf);
-            out.println("  TYPE:" + type + " (" + TYPES.get(type) + ")");
-
+            Type pType = TYPES.get(type);
+            out.println("  TYPE:" + type + " (" + pType == null ? "Unknown"
+                    : pType + ")");
             shortBuf = Arrays.copyOfRange(data, i, i + 2);
             i += 2;
             short length = byte2Short(shortBuf);
@@ -124,8 +125,12 @@ public class Intercept {
 
             shortBuf = Arrays.copyOfRange(data, i, i + length);
             i += length;
-            out.println("  BODY:" + bytesToHex(shortBuf) + " (String: "
-                    + new String(shortBuf).trim() + ")");
+            out.println("  BODY:"
+                    + bytesToHex(shortBuf)
+                    + " ("
+                    + (pType == null ? new String(shortBuf).trim()
+                            + "::unknown" : pType.makeHumanRadable(shortBuf)
+                            .trim() + "::" + pType.getClass().getName()) + ")");
         }
     }
 
