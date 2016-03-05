@@ -1,7 +1,12 @@
 ## Running the tool
-Compile: `javac src/Intercept.java`
+Compile: 
 
-Run: `java Intercept`
+	cd src
+	javac Intercept.java
+
+Run (for example): 
+	cd src
+	java Intercept
 
 ## Why is it possible to intercept the management traffic?
 - The traffic goes over broadcast.
