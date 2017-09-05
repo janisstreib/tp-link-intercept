@@ -16,14 +16,17 @@ Run (for example):
 ## Is it possible to configure foreign devices?
 Yes, after intercepting or bruteforcing the password (default is admin:admin on all devices, the maximum password length is 16) without any restrictions.
 
-##Package
+## What's the RC4 Key?
+	Ei2HNryt8ysSdRRI54XNQHBEbOIRqNjQgYxsTmuW3srSVRVFyLh8mwvhBLPFQph3ecDMLnDtjDUdrUwt7oTsJuYl72hXESNiD6jFIQCtQN1unsmn3JXjeYwGJ55pqTkVyN2OOm3vekF6G1LM4t3kiiG4lGwbxG4CG1s5Sli7gcINFBOLXQnPpsQNWDmPbOm74mE7eyR3L7tk8tUhI17FLKm11hrrd1ck74bMw3VYSK3X5RrDgXelewMU6o1tJ3iX
+
+## Package
 `<header>[<type><length><value>]`  
 The body may contain more than one data block called "TLV".
 
-##General communications
+## General communications
 The password is transmitted on each configuration change request.
 
-##List of possibly affected devices
+## List of possibly affected devices
 - TL-SG1024DE 1.0
 - TL-SG1024DE 2.0
 - TL-SG1016DE 1.0
@@ -34,7 +37,7 @@ The password is transmitted on each configuration change request.
 - TL-SG105E 2.0
 - TL-SG108PE 1.0
 
-##Sample output for a login
+## Sample output for a login
 
 	===NEW PACKET ON PORT 29809 FROM /172.19.79.55
 	Decrypted data:
